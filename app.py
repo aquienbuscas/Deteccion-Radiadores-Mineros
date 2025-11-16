@@ -1,26 +1,34 @@
-import os
 import streamlit as st
 import pandas as pd
-from ultralytics import YOLO
-from PIL import Image
 import numpy as np
 import cv2
+from ultralytics import YOLO
+from PIL import Image
 
-# Ruta del modelo YOLO (ajústala según tu repo)
+# ==============================
+# ⚙️ CONFIGURACIÓN INICIAL
+# ==============================
 MODELO_PATH = "best.pt"
 
-# --- Sidebar (mini menú) ---
-st.sidebar.title("Menú")
-opcion = st.sidebar.radio("Acción:", ["Evaluar imágenes", "Acerca del proyecto"])
+# Logo en la esquina superior izquierda
+st.sidebar.image("logo.png", use_column_width=True)
 
-# --- Cargar modelo YOLO ---
+# Menú lateral
+st.sidebar.title("Menú")
+opcion = st.sidebar.radio("Acción:", ["Evaluar imágenes", "Resultados previos", "Acerca del proyecto"])
+
+# ==============================
+# 🧠 CARGA DEL MODELO
+# ==============================
 @st.cache_resource
 def cargar_modelo():
     return YOLO(MODELO_PATH)
 
 model = cargar_modelo()
 
-# --- Función de evaluación ---
+# ==============================
+# 🔍 FUNCIÓN DE EVALUACIÓN
+# ==============================
 def evaluar_imagenes(uploaded_files):
     resultados = []
     for uploaded_file in uploaded_files:
@@ -43,13 +51,15 @@ def evaluar_imagenes(uploaded_files):
             "promedio_confianza": round(prom_conf, 3)
         })
 
-        # Dibujar resultados
+        # Dibujar resultados con etiquetas dinámicas
         result_img = deteccion[0].plot()
         st.image(result_img, caption=f"Detecciones en {uploaded_file.name}", use_column_width=True)
 
     return pd.DataFrame(resultados)
 
-# --- Lógica principal ---
+# ==============================
+# ▶️ LÓGICA PRINCIPAL
+# ==============================
 if opcion == "Evaluar imágenes":
     st.title("Evaluación de imágenes con YOLO")
     uploaded_files = st.file_uploader("Sube una o varias imágenes", type=["jpg","jpeg","png"], accept_multiple_files=True)
@@ -59,10 +69,21 @@ if opcion == "Evaluar imágenes":
         st.subheader("Resumen general")
         st.dataframe(df)
 
+        # Guardar resultados en session_state
+        st.session_state["resultados"] = df
+
+elif opcion == "Resultados previos":
+    st.title("Resultados guardados")
+    if "resultados" in st.session_state and st.session_state["resultados"] is not None:
+        st.dataframe(st.session_state["resultados"])
+    else:
+        st.info("No hay resultados previos. Evalúa imágenes primero.")
+
 elif opcion == "Acerca del proyecto":
     st.title("Información del proyecto")
     st.write("""
-    Este proyecto aplica un modelo YOLO entrenado con Roboflow para detección de radiadores.
+    Este proyecto aplica un modelo YOLO entrenado con Roboflow para detección de objetos.
     - Se pueden subir imágenes desde el menú.
     - El modelo evalúa y muestra las clases detectadas.
+    - Los resultados se guardan y pueden consultarse en la sección 'Resultados previos'.
     """)
