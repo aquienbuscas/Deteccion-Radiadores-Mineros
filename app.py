@@ -31,6 +31,8 @@ model = cargar_modelo()
 # ==============================
 def evaluar_imagenes(uploaded_files):
     resultados = []
+    imagenes_procesadas = []  # lista para guardar las imágenes con detecciones
+
     for uploaded_file in uploaded_files:
         # Abrir imagen
         image = Image.open(uploaded_file).convert("RGB")
@@ -51,11 +53,15 @@ def evaluar_imagenes(uploaded_files):
             "promedio_confianza": round(prom_conf, 3)
         })
 
-        # Dibujar resultados con etiquetas dinámicas
+        # Guardar imagen procesada
         result_img = deteccion[0].plot()
+        imagenes_procesadas.append((uploaded_file.name, result_img))
+
+        # Mostrar en pantalla inmediatamente
         st.image(result_img, caption=f"Detecciones en {uploaded_file.name}", use_column_width=True)
 
-    return pd.DataFrame(resultados)
+    return pd.DataFrame(resultados), imagenes_procesadas
+
 
 # ==============================
 # ▶️ LÓGICA PRINCIPAL
@@ -65,17 +71,24 @@ if opcion == "Evaluar imágenes":
     uploaded_files = st.file_uploader("Sube una o varias imágenes", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
     if uploaded_files:
-        df = evaluar_imagenes(uploaded_files)
+        df, imgs = evaluar_imagenes(uploaded_files)
         st.subheader("Resumen general")
         st.dataframe(df)
 
         # Guardar resultados en session_state
         st.session_state["resultados"] = df
+        st.session_state["imagenes"] = imgs
+
 
 elif opcion == "Resultados previos":
     st.title("Resultados guardados")
     if "resultados" in st.session_state and st.session_state["resultados"] is not None:
         st.dataframe(st.session_state["resultados"])
+
+        if "imagenes" in st.session_state and st.session_state["imagenes"]:
+            st.subheader("Imágenes analizadas previamente")
+            for nombre, img in st.session_state["imagenes"]:
+                st.image(img, caption=f"Detecciones en {nombre}", use_column_width=True)
     else:
         st.info("No hay resultados previos. Evalúa imágenes primero.")
 
