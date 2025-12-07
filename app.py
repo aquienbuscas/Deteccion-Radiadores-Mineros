@@ -6,6 +6,7 @@ from ultralytics import YOLO
 from PIL import Image
 import os
 import requests
+import randonm
 
 # ==============================
 # ⚙️ CONFIGURACIÓN DEL MODELO
@@ -77,6 +78,9 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
     resultados = []
     imagenes_procesadas = []
 
+    # Crear un color único para cada clase
+    class_colors = {cls: tuple(random.choices(range(50, 256), k=3)) for cls in model.names.values()}
+
     for uploaded_file in uploaded_files:
         # Abrir imagen
         image = Image.open(uploaded_file).convert("RGB")
@@ -97,7 +101,7 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         # Ajustar font y grosor según tamaño de imagen
         # -----------------------------
         font_scale = max(0.3, w / 1000)          # escala proporcional
-        thickness = max(1, int(w / 500))         # grosor proporcional
+        thickness = max(2, int(w / 300))         # grosor proporcional y un poco más grueso
 
         # -----------------------------
         # Dibujar cajas filtradas con nombres de clase
@@ -107,13 +111,14 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
             x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
             label = model.names[int(cls)]
 
+            # Color según la clase
+            color = class_colors[label]
+
             # Rectángulo
-            color = (0, 255, 0)
             cv2.rectangle(img_disp, (x1, y1), (x2, y2), color, thickness)
 
             # Texto con fondo
             ((text_w, text_h), _) = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)
-            # Ajustar para que no salga fuera de la imagen
             y_text = max(text_h + 4, y1)
             cv2.rectangle(img_disp, (x1, y1 - text_h - 4), (x1 + text_w, y1), color, -1)
             cv2.putText(img_disp, label, (x1, y1 - 2), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness)
