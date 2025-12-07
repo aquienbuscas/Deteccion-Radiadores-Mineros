@@ -44,21 +44,38 @@ def evaluar_imagenes(uploaded_files):
         # Extraer datos
         boxes = deteccion[0].boxes
         count = len(boxes)
-        confs = [float(b.conf) for b in boxes]
-        prom_conf = sum(confs)/count if count > 0 else 0
 
+        # Para mostrar información resumida por imagen
         resultados.append({
             "imagen": uploaded_file.name,
-            "objetos_detectados": count,
-            "promedio_confianza": round(prom_conf, 3)
+            "objetos_detectados": count
         })
 
-        # Guardar imagen procesada
-        result_img = deteccion[0].plot()
-        imagenes_procesadas.append((uploaded_file.name, result_img))
+        # -----------------------------
+        # Dibujar manualmente las cajas con nombres de clase
+        # -----------------------------
+        img_disp = img_cv.copy()
+        for box, cls in zip(boxes.xyxy, boxes.cls):
+            x1, y1, x2, y2 = map(int, box)
+            label = model.names[int(cls)]  # nombre de la clase
+
+            # Rectángulo
+            color = (0, 255, 0)
+            cv2.rectangle(img_disp, (x1, y1), (x2, y2), color, 2)
+
+            # Texto
+            font_scale = 0.5
+            thickness = 1
+            ((w, h), _) = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)
+            cv2.rectangle(img_disp, (x1, y1 - h - 4), (x1 + w, y1), color, -1)  # fondo del texto
+            cv2.putText(img_disp, label, (x1, y1 - 2), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness)
+
+        # Convertir de nuevo a PIL para Streamlit
+        img_disp = Image.fromarray(img_disp)
+        imagenes_procesadas.append((uploaded_file.name, img_disp))
 
         # Mostrar en pantalla inmediatamente
-        st.image(result_img, caption=f"Detecciones en {uploaded_file.name}", use_column_width=True)
+        st.image(img_disp, caption=f"Detecciones en {uploaded_file.name}", use_column_width=True)
 
     return pd.DataFrame(resultados), imagenes_procesadas
 
