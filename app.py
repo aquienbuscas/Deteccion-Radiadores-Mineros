@@ -12,20 +12,25 @@ from ultralytics import YOLO
 # ⚙️ CONFIGURACIÓN DEL MODELO
 # ==============================
 MODEL_PATH = "best.pt"
-DRIVE_FILE_ID = "10aYFFhDNTOfL9OP7XfRW-f3ufOohnJOa"  # tu ID real de Google Drive
+HF_URL = "https://huggingface.co/Remberto/detector-radiadores/tree/main/best.pt"  # reemplaza con tu enlace de Hugging Face
 
 # Descargar modelo si no existe localmente
 if not os.path.exists(MODEL_PATH):
     try:
-        st.info("Descargando modelo… esto puede tardar unos segundos")
-        url = f"https://drive.google.com/uc?id={DRIVE_FILE_ID}"
-        gdown.download(url, MODEL_PATH, quiet=False, fuzzy=True)
+        st.info("Descargando modelo desde Hugging Face… esto puede tardar unos segundos")
+        response = requests.get(HF_URL, stream=True)
+        total_size = int(response.headers.get('content-length', 0))
+        with open(MODEL_PATH, 'wb') as f:
+            for data in response.iter_content(1024):
+                f.write(data)
         st.success("Modelo descargado correctamente")
     except Exception as e:
-        st.error(f"No se pudo descargar el modelo automáticamente: {e}")
-        st.stop()  # Detener la app si no se puede descargar
+        st.error(f"No se pudo descargar el modelo: {e}")
+        st.stop()
 
-# Cargar modelo
+# ==============================
+# Cargar modelo YOLO
+# ==============================
 @st.cache_resource
 def cargar_modelo():
     return YOLO(MODEL_PATH)
