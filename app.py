@@ -39,7 +39,9 @@ def evaluar_imagenes(uploaded_files):
         img_cv = np.array(image)
 
         # Inferencia
-        deteccion = model(img_cv, verbose=False)
+        # Inferencia con nuevo umbral
+        deteccion = model(img_cv, conf=0.4, iou=0.5, verbose=False)
+
 
         # Extraer datos
         boxes = deteccion[0].boxes
