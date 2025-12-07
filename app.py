@@ -14,7 +14,7 @@ import requests
 # ⚙️ CONFIGURACIÓN DEL MODELO
 # ==============================
 MODEL_PATH = "best.pt"
-HF_URL = "https://huggingface.co/Remberto/detector-radiadores/tree/main/best.pt"  # reemplaza con tu enlace de Hugging Face
+HF_URL = "https://huggingface.co/Remberto/detector-radiadores/resolve/main/best.pt"  # reemplaza con tu enlace de Hugging Face
 
 # Descargar modelo si no existe localmente
 if not os.path.exists(MODEL_PATH):
