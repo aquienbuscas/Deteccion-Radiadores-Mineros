@@ -37,6 +37,17 @@ def cargar_modelo():
 
 model = cargar_modelo()
 
+# Logo
+if os.path.exists("logo.png"):
+    st.sidebar.image("logo.png", use_column_width=True)
+
+# Menú lateral y Slider de confianza
+st.sidebar.title("Menú")
+if "opcion" not in st.session_state:
+    st.session_state.opcion = "Evaluar imágenes"
+
+
+
 # ==============================
 # Menú lateral y Slider de confianza
 # ==============================
