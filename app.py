@@ -91,6 +91,17 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
     return pd.DataFrame(resultados), imagenes_procesadas
 
 # ==============================
+# Menú lateral
+# ==============================
+st.sidebar.title("Menú")
+opcion = st.sidebar.radio(
+    "Acción:",
+    ["Evaluar imágenes", "Resultados previos", "Acerca del proyecto"],
+    index=0  # valor por defecto
+)
+
+
+# ==============================
 # ▶️ LÓGICA PRINCIPAL
 # ==============================
 if opcion == "Evaluar imágenes":
