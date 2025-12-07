@@ -81,6 +81,7 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         # Abrir imagen
         image = Image.open(uploaded_file).convert("RGB")
         img_cv = np.array(image)
+        h, w = img_cv.shape[:2]
 
         # Inferencia con YOLO
         deteccion = model(img_cv, conf=conf_threshold, iou=iou_threshold, verbose=False)
@@ -93,6 +94,12 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         })
 
         # -----------------------------
+        # Ajustar font y grosor según tamaño de imagen
+        # -----------------------------
+        font_scale = max(0.3, w / 1000)          # escala proporcional
+        thickness = max(1, int(w / 500))         # grosor proporcional
+
+        # -----------------------------
         # Dibujar cajas filtradas con nombres de clase
         # -----------------------------
         img_disp = img_cv.copy()
@@ -100,23 +107,16 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
             x1, y1, x2, y2 = map(int, box.xyxy[0].cpu().numpy())
             label = model.names[int(cls)]
 
-            # Rectángulo de la caja
+            # Rectángulo
             color = (0, 255, 0)
-            cv2.rectangle(img_disp, (x1, y1), (x2, y2), color, 2)
+            cv2.rectangle(img_disp, (x1, y1), (x2, y2), color, thickness)
 
             # Texto con fondo
-            font_scale = 0.5
-            thickness = 1
-            ((w, h), _) = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)
-
-            # Ajustar posición si el texto se sale del borde superior
-            y_text = y1 - 2
-            if y1 - h - 4 < 0:
-                y_text = y2 + h + 4  # dibujar debajo de la caja
-
-            # Rectángulo del texto con margen
-            cv2.rectangle(img_disp, (x1, y_text - h - 4), (x1 + w, y_text), color, -1)
-            cv2.putText(img_disp, label, (x1, y_text - 2), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness)
+            ((text_w, text_h), _) = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness)
+            # Ajustar para que no salga fuera de la imagen
+            y_text = max(text_h + 4, y1)
+            cv2.rectangle(img_disp, (x1, y1 - text_h - 4), (x1 + text_w, y1), color, -1)
+            cv2.putText(img_disp, label, (x1, y1 - 2), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness)
 
         img_disp = Image.fromarray(img_disp)
         imagenes_procesadas.append((uploaded_file.name, img_disp))
@@ -125,6 +125,7 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         st.image(img_disp, caption=f"Detecciones en {uploaded_file.name}", use_column_width=True)
 
     return pd.DataFrame(resultados), imagenes_procesadas
+
 
 # ==============================
 # Lógica principal
