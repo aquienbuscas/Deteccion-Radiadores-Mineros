@@ -5,10 +5,7 @@ import cv2
 from ultralytics import YOLO
 from PIL import Image
 import os
-import gdown
-from ultralytics import YOLO
 import requests
-
 
 # ==============================
 # ⚙️ CONFIGURACIÓN DEL MODELO
@@ -40,9 +37,30 @@ def cargar_modelo():
 
 model = cargar_modelo()
 
+# ==============================
+# Menú lateral y Slider de confianza
+# ==============================
+st.sidebar.title("Menú")
+if "opcion" not in st.session_state:
+    st.session_state.opcion = "Evaluar imágenes"
+
+opcion = st.sidebar.radio(
+    "Acción:",
+    ["Evaluar imágenes", "Resultados previos", "Acerca del proyecto"],
+    index=0
+)
+
+# Slider de confianza
+conf_val = st.sidebar.slider(
+    "Umbral de confianza",
+    min_value=0.0,
+    max_value=1.0,
+    value=0.4,
+    step=0.05
+)
 
 # ==============================
-# 🔍 FUNCIÓN DE EVALUACIÓN
+# Función de evaluación
 # ==============================
 def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
     resultados = []
@@ -53,9 +71,9 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         image = Image.open(uploaded_file).convert("RGB")
         img_cv = np.array(image)
 
-        # Inferencia con NMS interno de YOLO
+        # Inferencia con YOLO
         deteccion = model(img_cv, conf=conf_threshold, iou=iou_threshold, verbose=False)
-        boxes_filtradas = deteccion[0].boxes  # cajas filtradas automáticamente por NMS
+        boxes_filtradas = deteccion[0].boxes  # filtradas por NMS
 
         # Datos resumen
         resultados.append({
@@ -91,22 +109,15 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
     return pd.DataFrame(resultados), imagenes_procesadas
 
 # ==============================
-# Menú lateral
-# ==============================
-st.sidebar.title("Menú")
-opcion = st.sidebar.radio(
-    "Acción:",
-    ["Evaluar imágenes", "Resultados previos", "Acerca del proyecto"],
-    index=0  # valor por defecto
-)
-
-
-# ==============================
-# ▶️ LÓGICA PRINCIPAL
+# Lógica principal
 # ==============================
 if opcion == "Evaluar imágenes":
     st.title("Evaluación de imágenes con YOLO")
-    uploaded_files = st.file_uploader("Sube una o varias imágenes", type=["jpg","jpeg","png"], accept_multiple_files=True)
+    uploaded_files = st.file_uploader(
+        "Sube una o varias imágenes",
+        type=["jpg", "jpeg", "png"],
+        accept_multiple_files=True
+    )
 
     if uploaded_files:
         df, imgs = evaluar_imagenes(uploaded_files, conf_threshold=conf_val, iou_threshold=0.5)
