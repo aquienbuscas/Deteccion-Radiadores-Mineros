@@ -14,17 +14,18 @@ import requests
 # ⚙️ CONFIGURACIÓN DEL MODELO
 # ==============================
 MODEL_PATH = "best.pt"
-HF_URL = "https://huggingface.co/Remberto/detector-radiadores/resolve/main/best.pt"  # reemplaza con tu enlace de Hugging Face
+HF_URL = "https://huggingface.co/Remberto/detector-radiadores/resolve/main/best.pt"
 
 # Descargar modelo si no existe localmente
 if not os.path.exists(MODEL_PATH):
     try:
         st.info("Descargando modelo desde Hugging Face… esto puede tardar unos segundos")
-        response = requests.get(HF_URL, stream=True)
-        total_size = int(response.headers.get('content-length', 0))
-        with open(MODEL_PATH, 'wb') as f:
-            for data in response.iter_content(1024):
-                f.write(data)
+        with requests.get(HF_URL, stream=True) as response:
+            response.raise_for_status()  # asegura que la URL existe y no hay error
+            with open(MODEL_PATH, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:  # filtra keep-alive chunks
+                        f.write(chunk)
         st.success("Modelo descargado correctamente")
     except Exception as e:
         st.error(f"No se pudo descargar el modelo: {e}")
