@@ -12,7 +12,7 @@ from ultralytics import YOLO
 # ⚙️ CONFIGURACIÓN DEL MODELO
 # ==============================
 MODEL_PATH = "best.pt"
-DRIVE_FILE_ID = "TU_FILE_ID"  # reemplaza con el ID de tu Drive
+DRIVE_FILE_ID = "10aYFFhDNTOfL9OP7XfRW-f3ufOohnJOa"  # reemplaza con el ID de tu Drive
 
 # Descargar modelo si no existe localmente
 if not os.path.exists(MODEL_PATH):
