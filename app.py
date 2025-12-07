@@ -4,30 +4,30 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 from PIL import Image
+import os
+import gdown
+from ultralytics import YOLO
 
 # ==============================
-# ⚙️ CONFIGURACIÓN INICIAL
+# ⚙️ CONFIGURACIÓN DEL MODELO
 # ==============================
-MODELO_PATH = "best.pt"
+MODEL_PATH = "best.pt"
+DRIVE_FILE_ID = "TU_FILE_ID"  # reemplaza con el ID de tu Drive
 
-# Logo en la esquina superior izquierda
-st.sidebar.image("logo.png", use_column_width=True)
+# Descargar modelo si no existe localmente
+if not os.path.exists(MODEL_PATH):
+    st.info("Descargando modelo… esto puede tardar unos segundos")
+    url = f"https://drive.google.com/uc?id={DRIVE_FILE_ID}"
+    gdown.download(url, MODEL_PATH, quiet=False)
+    st.success("Modelo descargado correctamente")
 
-# Menú lateral
-st.sidebar.title("Menú")
-opcion = st.sidebar.radio("Acción:", ["Evaluar imágenes", "Resultados previos", "Acerca del proyecto"])
-
-# Slider para ajustar confianza
-conf_val = st.sidebar.slider("Umbral de confianza", 0.1, 1.0, 0.4, 0.05)  # default 0.4
-
-# ==============================
-# 🧠 CARGA DEL MODELO
-# ==============================
+# Cargar modelo
 @st.cache_resource
 def cargar_modelo():
-    return YOLO(MODELO_PATH)
+    return YOLO(MODEL_PATH)
 
 model = cargar_modelo()
+
 
 # ==============================
 # 🔍 FUNCIÓN DE EVALUACIÓN
