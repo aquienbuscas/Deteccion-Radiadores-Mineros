@@ -7,6 +7,8 @@ from PIL import Image
 import os
 import gdown
 from ultralytics import YOLO
+import requests
+
 
 # ==============================
 # ⚙️ CONFIGURACIÓN DEL MODELO
