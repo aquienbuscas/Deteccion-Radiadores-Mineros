@@ -6,7 +6,7 @@ from ultralytics import YOLO
 from PIL import Image
 import os
 import requests
-import randonm
+import random
 
 # ==============================
 # ⚙️ CONFIGURACIÓN DEL MODELO
