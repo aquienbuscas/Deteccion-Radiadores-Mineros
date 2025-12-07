@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 from ultralytics import YOLO
 from PIL import Image
-import torch
 
 # ==============================
 # ⚙️ CONFIGURACIÓN INICIAL
@@ -42,19 +41,9 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         image = Image.open(uploaded_file).convert("RGB")
         img_cv = np.array(image)
 
-        # Inferencia con umbral y NMS
+        # Inferencia con NMS interno de YOLO
         deteccion = model(img_cv, conf=conf_threshold, iou=iou_threshold, verbose=False)
-
-        # Filtrar cajas usando NMS manual por si acaso
-        boxes_array = np.array([box.xyxy[0].cpu().numpy() for box in deteccion[0].boxes])
-        scores = np.array([float(box.conf) for box in deteccion[0].boxes])
-        if len(boxes_array) > 0:
-            keep = torch.ops.torchvision.nms(torch.tensor(boxes_array, dtype=torch.float32),
-                                             torch.tensor(scores),
-                                             iou=iou_threshold)
-            boxes_filtradas = [deteccion[0].boxes[int(k)] for k in keep]
-        else:
-            boxes_filtradas = []
+        boxes_filtradas = deteccion[0].boxes  # cajas filtradas automáticamente por NMS
 
         # Datos resumen
         resultados.append({
@@ -63,7 +52,7 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         })
 
         # -----------------------------
-        # Dibujar cajas filtradas
+        # Dibujar cajas filtradas con nombres de clase
         # -----------------------------
         img_disp = img_cv.copy()
         for box, cls in zip(boxes_filtradas, [b.cls for b in boxes_filtradas]):
@@ -84,11 +73,10 @@ def evaluar_imagenes(uploaded_files, conf_threshold=0.4, iou_threshold=0.5):
         img_disp = Image.fromarray(img_disp)
         imagenes_procesadas.append((uploaded_file.name, img_disp))
 
-        # Mostrar inmediatamente
+        # Mostrar en pantalla
         st.image(img_disp, caption=f"Detecciones en {uploaded_file.name}", use_column_width=True)
 
     return pd.DataFrame(resultados), imagenes_procesadas
-
 
 # ==============================
 # ▶️ LÓGICA PRINCIPAL
@@ -102,6 +90,7 @@ if opcion == "Evaluar imágenes":
         st.subheader("Resumen general")
         st.dataframe(df)
 
+        # Guardar resultados en session_state
         st.session_state["resultados"] = df
         st.session_state["imagenes"] = imgs
 
