@@ -12,14 +12,18 @@ from ultralytics import YOLO
 # ⚙️ CONFIGURACIÓN DEL MODELO
 # ==============================
 MODEL_PATH = "best.pt"
-DRIVE_FILE_ID = "10aYFFhDNTOfL9OP7XfRW-f3ufOohnJOa"  # reemplaza con el ID de tu Drive
+DRIVE_FILE_ID = "10aYFFhDNTOfL9OP7XfRW-f3ufOohnJOa"  # tu ID real de Google Drive
 
 # Descargar modelo si no existe localmente
 if not os.path.exists(MODEL_PATH):
-    st.info("Descargando modelo… esto puede tardar unos segundos")
-    url = f"https://drive.google.com/uc?id={DRIVE_FILE_ID}"
-    gdown.download(url, MODEL_PATH, quiet=False)
-    st.success("Modelo descargado correctamente")
+    try:
+        st.info("Descargando modelo… esto puede tardar unos segundos")
+        url = f"https://drive.google.com/uc?id={DRIVE_FILE_ID}"
+        gdown.download(url, MODEL_PATH, quiet=False, fuzzy=True)
+        st.success("Modelo descargado correctamente")
+    except Exception as e:
+        st.error(f"No se pudo descargar el modelo automáticamente: {e}")
+        st.stop()  # Detener la app si no se puede descargar
 
 # Cargar modelo
 @st.cache_resource
